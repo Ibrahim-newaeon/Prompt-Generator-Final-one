@@ -1,0 +1,34 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sandbox-website-template",
+  "compatibility_date": "2025-10-08",
+  "compatibility_flags": [
+    "nodejs_compat_v2"
+  ],
+  "main": "./src/api/index.ts",
+  "observability": {
+    "enabled": true
+  },
+  "upload_source_maps": true,
+  "assets": {
+    "directory": "./dist/client",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": [
+      "/api/*"
+    ]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "6ahqjaur6baj1eqyx7292qy37u83f3z9",
+      "database_id": "4164e73c-ac7b-4677-8c8b-4893a8f27a7a",
+      "migrations_dir": "src/api/migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "bucket_name": "6ahqjaur6baj1eqyx7292qy37u83f3z9",
+      "binding": "BUCKET"
+    }
+  ]
+}

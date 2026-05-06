@@ -1,0 +1,210 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+:root {
+  --radius: 0.75rem;
+  --background: #07070d;
+  --foreground: #f0f0ff;
+  --card: #0f0f1a;
+  --card-foreground: #f0f0ff;
+  --popover: #0f0f1a;
+  --popover-foreground: #f0f0ff;
+  --primary: #7c3aed;
+  --primary-foreground: #f0f0ff;
+  --secondary: #161625;
+  --secondary-foreground: #f0f0ff;
+  --muted: #161625;
+  --muted-foreground: #6b6b8a;
+  --accent: #2563eb;
+  --accent-foreground: #f0f0ff;
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: rgba(255,255,255,0.07);
+  --input: rgba(255,255,255,0.06);
+  --ring: #7c3aed;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    box-sizing: border-box;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'DM Sans', sans-serif;
+    background-color: #07070d;
+    color: #f0f0ff;
+    min-height: 100vh;
+  }
+}
+
+/* ---- Custom global styles ---- */
+.font-display {
+  font-family: 'Syne', sans-serif;
+}
+.font-mono-code {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #ff3cac, #784ba0, #2b86c5, #00d2ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-warm {
+  background: linear-gradient(135deg, #f093fb, #f5576c, #fda085);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glow button */
+.btn-gradient {
+  background: linear-gradient(135deg, #7c3aed, #2563eb);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+}
+.btn-gradient:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 30px rgba(124, 58, 237, 0.5);
+}
+.btn-gradient:active {
+  transform: translateY(0);
+}
+.btn-gradient:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Glass card */
+.glass-card {
+  background: rgba(15, 15, 26, 0.8);
+  border: 1px solid rgba(255,255,255,0.07);
+  backdrop-filter: blur(12px);
+}
+
+/* Glowing input */
+.glow-input {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #f0f0ff;
+  font-family: 'DM Sans', sans-serif;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+.glow-input:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+}
+.glow-input::placeholder {
+  color: #6b6b8a;
+}
+
+/* Prompt type pill active states */
+.pill-chat.active    { background: rgba(124,58,237,0.2); border-color: #7c3aed; color: #c4b5fd; }
+.pill-image.active   { background: rgba(6,182,212,0.15); border-color: #06b6d4; color: #67e8f9; }
+.pill-code.active    { background: rgba(16,185,129,0.15); border-color: #10b981; color: #6ee7b7; }
+
+/* Hero grid background */
+.hero-grid {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(124,58,237,0.25) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 80% 20%, rgba(37,99,235,0.2) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 20% 40%, rgba(6,182,212,0.15) 0%, transparent 60%),
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+}
+
+/* Tab underline */
+.tab-active {
+  position: relative;
+  color: #f0f0ff;
+}
+.tab-active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #7c3aed, #2563eb);
+  border-radius: 9999px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.4); border-radius: 9999px; }
+
+/* Star rating */
+.star { cursor: pointer; transition: transform 0.1s; }
+.star:hover { transform: scale(1.2); }
+
+/* Animate fade up */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-up {
+  animation: fadeUp 0.5s ease forwards;
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.shimmer-text {
+  background: linear-gradient(90deg, #6b6b8a 25%, #f0f0ff 50%, #6b6b8a 75%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 1.5s linear infinite;
+}
+
+/* Color accent bars per type */
+.border-chat  { border-left: 3px solid #7c3aed; }
+.border-image { border-left: 3px solid #06b6d4; }
+.border-code  { border-left: 3px solid #10b981; }
+
+/* Spectrum bar at top */
+.spectrum-bar {
+  height: 3px;
+  background: linear-gradient(90deg, #ff3cac, #784ba0, #2b86c5, #00d2ff, #a8ff78, #ffbe76);
+}
