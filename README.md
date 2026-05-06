@@ -1,82 +1,148 @@
-# Website
+# MegaPrompt
 
-React + Vite + Hono + Tailwind + Cloudflare Workers
+AI-powered prompt generator. Type a rough idea, get back a production-grade prompt for Claude, ChatGPT, image gen, or code gen.
 
-## Project Structure
+Built on Cloudflare Workers + React 19 + Hono + D1, with Better Auth and Autumn billing.
 
-- `src/web/` — React frontend: pages, components, styles, hooks
-- `src/api/` — Hono API server (`/api/*`), database schema and migrations
-- `public/` — Static assets (favicon, og-image, logo)
+## What it does
 
-## Quick Start
+Two generation modes:
+
+- **Generic LLM** — expands ideas into chat / image / code prompts. Haiku for Free + Starter, Sonnet for Pro + Agency.
+- **Claude Mega Prompt (v2.3)** — structured XML prompt with intent detection, completeness scoring, locale awareness, and a repair loop. Pro and Agency only, runs on Opus.
+
+Auth is required to generate. Quota and plan gating are enforced server-side via Autumn.
+
+## Plans
+
+| Plan    | Prompts          | Generic Model       | Claude Mode | Bulk Export | Price    |
+|---------|------------------|---------------------|-------------|-------------|----------|
+| Free    | 1 lifetime       | `claude-haiku-4.5`  | —           | —           | $0       |
+| Starter | 50 / month       | `claude-haiku-4.5`  | —           | —           | $9/mo    |
+| Pro     | 200 / month      | `claude-sonnet-4-5` | Opus        | —           | $29/mo   |
+| Agency  | Unlimited        | `claude-sonnet-4-5` | Opus        | MD + CSV    | $79/mo   |
+
+## Stack
+
+| Layer         | Tech                                                |
+|---------------|-----------------------------------------------------|
+| Runtime       | Cloudflare Workers (Wrangler + `@cloudflare/vite-plugin`) |
+| Backend       | Hono 4                                              |
+| Frontend      | React 19 + Vite 7 + Wouter 3                        |
+| Styling       | Tailwind CSS v4 (`@theme` in `styles.css`)          |
+| Database      | Cloudflare D1 + Drizzle ORM                         |
+| Auth          | Better Auth 1.4 (email + password)                  |
+| Billing       | Autumn JS 1.2 + Stripe                              |
+| AI            | Vercel AI SDK → Claude via Cloudflare AI Gateway    |
+
+## Project structure
+
+```
+src/
+├── api/                   ← Hono backend (Cloudflare Worker)
+│   ├── index.ts           ← all routes (/ping, /generate, /generate-claude, /prompts, /admin)
+│   ├── auth.ts            ← Better Auth factory
+│   ├── claude-system-prompt.ts   ← XML system prompt for Claude v2.3
+│   ├── middleware/        ← authMiddleware + authenticatedOnly
+│   ├── database/          ← Drizzle schema + Better Auth schema
+│   └── migrations/        ← Drizzle SQL migrations
+└── web/                   ← React 19 frontend
+    ├── app.tsx            ← Routes
+    ├── pages/             ← landing / index / auth / pricing / admin
+    ├── components/        ← Provider + UI primitives
+    └── lib/auth.ts        ← Better Auth client
+```
+
+See [`CLAUDE.md`](./CLAUDE.md) for architectural conventions, API contract, and plan-gating logic.
+
+## Quick start
 
 ```bash
-# Install dependencies
 bun install
-
-# Generate types and run migrations
-bun cf-typegen
-bun db:generate
-bun db:migrate
-
-# Start dev server
-bun dev
+bun run cf-typegen     # generate Cloudflare Worker types
+bun run db:generate    # generate migration SQL from Drizzle schema
+bun run db:migrate     # apply migrations to local D1
+bun dev --port 8452    # start dev server
 ```
 
-## shadcn/ui
+You'll need a `.dev.vars` file in the project root:
 
-Add components you need, customize them however you want.
+```
+AI_GATEWAY_BASE_URL=https://gateway.ai.cloudflare.com/v1/...
+AI_GATEWAY_API_KEY=...
+BETTER_AUTH_SECRET=...
+AUTUMN_SECRET_KEY=sk_...
+```
+
+## Common scripts
 
 ```bash
-bun x shadcn@latest add button card dialog
+bun run check          # full quality lap: tsgo + vite build + wrangler dry-run
+bun run build          # production build
+bun run lint           # eslint
+bunx tsgo              # type-check only
+bunx atmn push -y      # push autumn.config.ts billing plans to Autumn sandbox
+bunx wrangler deploy   # deploy Worker to Cloudflare
 ```
-
-Components land in `src/web/components/ui/`, import with `@/components/ui/button`.
-
-```tsx
-import { Button } from "@/components/ui/button"
-
-<Button variant="outline">Click me</Button>
-```
-
-## Routing
-
-Client-side routing uses [wouter](https://github.com/molefrog/wouter). Add routes in `src/web/app.tsx`:
-
-```tsx
-import { Route, Switch } from "wouter";
-
-<Switch>
-  <Route path="/" component={Home} />
-  <Route path="/about" component={About} />
-</Switch>
-```
-
-## Database
-
-Uses [Drizzle ORM](https://orm.drizzle.team/) with Cloudflare D1.
-
-```bash
-bun db:generate       # Generate migrations from schema
-bun db:migrate        # Apply migrations locally
-```
-
-Schema is in `src/api/database/schema.ts`, migrations in `src/api/migrations/`.
 
 ## API
 
-Backend uses [Hono](https://hono.dev/) on Cloudflare Workers. All routes are under `/api/*` in `src/api/index.ts`.
+All routes are under `/api/`.
 
-```ts
-app.get('/api/hello', (c) => c.json({ message: 'Hello' }));
+| Method | Path                          | Auth                    | Notes |
+|--------|-------------------------------|-------------------------|-------|
+| GET    | `/api/ping`                   | —                       | Health check |
+| ALL    | `/api/auth/*`                 | —                       | Better Auth handler |
+| ALL    | `/api/autumn/*`               | —                       | Autumn billing handler |
+| POST   | `/api/generate`               | User                    | Generic mode generation |
+| POST   | `/api/generate-claude`        | User + Pro plan         | Claude v2.3 structured generation |
+| POST   | `/api/prompts`                | User                    | Save prompt |
+| GET    | `/api/prompts`                | User                    | List user's prompts |
+| PATCH  | `/api/prompts/:id/rating`     | User                    | Rate a prompt |
+| DELETE | `/api/prompts/:id`            | User                    | Delete a prompt |
+| GET    | `/api/prompts/export`         | User + Agency plan      | Bulk export as `md` or `csv` |
+| GET    | `/api/admin/users`            | Admin email             | List users + plans + prompt counts |
+| GET    | `/api/admin/stats`            | Admin email             | Usage stats + 30-day activity |
+| GET    | `/api/admin/revenue`          | Admin email             | Subscription data from Autumn |
+| PATCH  | `/api/admin/users/:id/plan`   | Admin email             | Change a user's plan |
+| DELETE | `/api/admin/users/:id`        | Admin email             | Delete user + cascade prompts |
+
+Admin allowlist is hardcoded in `src/api/index.ts` (search for `ADMIN_EMAILS`).
+
+## Working with Claude Code
+
+This repo is set up for [Claude Code](https://claude.com/claude-code):
+
+- [`CLAUDE.md`](./CLAUDE.md) — architecture, conventions, definition of done.
+- `.claude/settings.json` — permission allowlist for safe commands; deny list blocks `wrangler deploy`, `--remote` D1 commands, force-push, etc.
+- `.claude/commands/` — slash commands:
+  - `/check` — run the full pre-deploy quality lap.
+  - `/migrate` — generate + apply a Drizzle migration locally.
+  - `/deploy` — pre-flight check before a production deploy (does not deploy itself).
+
+## Deploy
+
+Set production secrets (one-time):
+
+```bash
+bunx wrangler secret put BETTER_AUTH_SECRET
+bunx wrangler secret put AUTUMN_SECRET_KEY
+bunx wrangler secret put AI_GATEWAY_BASE_URL
+bunx wrangler secret put AI_GATEWAY_API_KEY
 ```
 
-## Config
+Apply migrations to remote D1:
 
-`website.config.json` contains the site name, description, and URL — use it as the source of truth for site-wide values.
+```bash
+bunx wrangler d1 migrations apply DB --remote
+```
 
-## Agent Rules
+Deploy the Worker:
 
-**CRITICAL: This project uses Tailwind CSS v4.** No `tailwind.config.js`, no `postcss.config.js`, no `@tailwind` directives. All configuration is CSS-first via `@theme` in `src/web/styles.css` and the `@tailwindcss/vite` plugin. Do NOT use Tailwind v3 syntax.
+```bash
+bunx wrangler deploy
+```
 
-**IMPORTANT: Don't assume how a package works from memory.** Run `bun build` to catch type errors. If anything fails, check the package docs.
+## License
+
+Private / unreleased.
