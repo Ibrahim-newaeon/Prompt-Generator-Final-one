@@ -200,3 +200,6 @@ dist
 
 ### Claude Code ###
 .claude/settings.local.json
+
+# Personal Claude Code overrides
+CLAUDE.local.md
